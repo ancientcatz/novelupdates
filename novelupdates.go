@@ -86,17 +86,23 @@ func SearchSeriesJSON(seriesName string) ([]byte, error) {
 	return jsonData, nil
 }
 
-// JSON method for SearchResult to marshal it into JSON format with custom indent
-func (results *SearchResult) ToJSON(indent ...int) ([]byte, error) {
+// ToJSON converts SearchResult to JSON format with customizable indentation.
+// If the indent parameter is provided and is a positive integer within a reasonable range,
+// it determines the number of spaces for indentation; otherwise, it defaults to 2 spaces.
+func (searchResults *SearchResult) ToJSON(indent ...int) ([]byte, error) {
 	customIndent := 2
 	if len(indent) > 0 {
-		customIndent = indent[0]
+		requestedIndent := indent[0]
+		if requestedIndent > 0 && requestedIndent <= 8 {
+			customIndent = requestedIndent
+		}
 	}
-	jsonData, err := json.MarshalIndent(results, "", strings.Repeat(" ", customIndent))
+
+	jsonOutput, err := json.MarshalIndent(searchResults, "", strings.Repeat(" ", customIndent))
 	if err != nil {
 		return nil, err
 	}
-	return jsonData, nil
+	return jsonOutput, nil
 }
 
 // GetSeriesInfo retrieves detailed information about a series on NovelUpdates
@@ -112,17 +118,23 @@ func GetSeriesInfo(seriesID string) (*SeriesResult, error) {
 	return parseSeries(resp)
 }
 
-// JSON method for SeriesResult to marshal it into JSON format with custom indent
-func (results *SeriesResult) ToJSON(indent ...int) ([]byte, error) {
+// ToJSON converts SeriesResult to JSON format with customizable indentation.
+// If the indent parameter is provided and is a positive integer within a reasonable range,
+// it determines the number of spaces for indentation; otherwise, it defaults to 2 spaces.
+func (seriesResults *SeriesResult) ToJSON(indent ...int) ([]byte, error) {
 	customIndent := 2
 	if len(indent) > 0 {
-		customIndent = indent[0]
+		requestedIndent := indent[0]
+		if requestedIndent > 0 && requestedIndent <= 8 {
+			customIndent = requestedIndent
+		}
 	}
-	jsonData, err := json.MarshalIndent(results, "", strings.Repeat(" ", customIndent))
+
+	jsonOutput, err := json.MarshalIndent(seriesResults, "", strings.Repeat(" ", customIndent))
 	if err != nil {
 		return nil, err
 	}
-	return jsonData, nil
+	return jsonOutput, nil
 }
 
 func parseSearch(req *http.Response) ([]*SearchResult, error) {
