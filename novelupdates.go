@@ -12,6 +12,13 @@ import (
 	"github.com/imroc/req/v3"
 )
 
+type QuickSearchResult struct {
+	Title string `json:"title"`
+	ID    string `json:"id"`
+	URL   string `json:"url"`
+	Image string `json:"image"`
+}
+
 type SearchResult struct {
 	Title        string              `json:"title"`
 	ID           string              `json:"id"`
@@ -47,6 +54,57 @@ type SeriesResult struct {
 	AssociatedNames      []string            `json:"associated_names"`
 	Groups               []map[string]string `json:"groups"`
 	Tags                 []map[string]string `json:"tags"`
+}
+
+// QuickSearchSeries performs a quick search for a series on NovelUpdates
+// It takes a series name as a parameter and returns the parsed results.
+func QuickSearchSeries(seriesName string) ([]*QuickSearchResult, error) {
+	// Construct the URL for searching a series
+	searchURL := "https://novelupdates.com/wp-admin/admin-ajax.php"
+	// dataRaw := "action=nd_ajaxsearchmain&strType=desktop&strOne=%s&strSearchType=series"
+	dataRaw := map[string]string{
+		"action":        "nd_ajaxsearchmain",
+		"strType":       "desktop",
+		"strOne":        seriesName,
+		"strSearchType": "series",
+	}
+	resp, err := makePostRequest(searchURL, dataRaw)
+	if err != nil {
+		return []*QuickSearchResult{}, err
+	}
+
+	return parseQuickSearch(resp)
+}
+
+// QuickSearchSeriesJSON performs a quick search for a series on NovelUpdates
+// It takes a series name as a parameter and returns the quick search results in JSON format as a byte slice.
+func QuickSearchSeriesJSON(seriesName string) ([]byte, error) {
+	// Construct the URL for searching a series
+	searchURL := "https://novelupdates.com/wp-admin/admin-ajax.php"
+	// dataRaw := "action=nd_ajaxsearchmain&strType=desktop&strOne=%s&strSearchType=series"
+	dataRaw := map[string]string{
+		"action":        "nd_ajaxsearchmain",
+		"strType":       "desktop",
+		"strOne":        seriesName,
+		"strSearchType": "series",
+	}
+	resp, err := makePostRequest(searchURL, dataRaw)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse and return the quick search results in JSON format
+	results, err := parseQuickSearch(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonData, err := json.MarshalIndent(results, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonData, nil
 }
 
 // SearchSeries performs a search for a series on NovelUpdates
@@ -135,6 +193,33 @@ func (seriesResults *SeriesResult) ToJSON(indent ...int) ([]byte, error) {
 		return nil, err
 	}
 	return jsonOutput, nil
+}
+
+func parseQuickSearch(req *http.Response) ([]*QuickSearchResult, error) {
+	doc, err := htmlquery.Parse(req.Body)
+	if err != nil {
+		return []*QuickSearchResult{}, err
+	}
+
+	results := []*QuickSearchResult{}
+
+	for _, result := range htmlquery.Find(doc, "//ul") {
+		body := htmlquery.FindOne(result, "//li")
+		title := strings.TrimSpace(htmlquery.InnerText(htmlquery.FindOne(body, "//a/span")))
+		url := htmlquery.SelectAttr(htmlquery.FindOne(body, "//a"), "href")
+		image := htmlquery.SelectAttr(htmlquery.FindOne(body, "//img"), "src")
+
+		resutStruct := &QuickSearchResult{
+			Title: title,
+			ID:    extractIDFromURL(url),
+			URL:   url,
+			Image: image,
+		}
+
+		results = append(results, resutStruct)
+	}
+
+	return results, nil
 }
 
 func parseSearch(req *http.Response) ([]*SearchResult, error) {
@@ -385,6 +470,15 @@ func parseSeries(req *http.Response) (*SeriesResult, error) {
 func makeGetRequest(url string) (*http.Response, error) {
 	client := req.C().ImpersonateChrome()
 	resp, err := client.R().Get(url)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Response, nil
+}
+
+func makePostRequest(url string, formData map[string]string) (*http.Response, error) {
+	client := req.C().ImpersonateChrome()
+	resp, err := client.R().SetFormData(formData).Post(url)
 	if err != nil {
 		return nil, err
 	}
