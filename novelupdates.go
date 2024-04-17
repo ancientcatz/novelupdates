@@ -3,7 +3,6 @@ package novelupdates
 import (
 	"encoding/json"
 	"fmt"
-	// "log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -195,8 +194,8 @@ func (seriesResults *SeriesResult) ToJSON(indent ...int) ([]byte, error) {
 	return jsonOutput, nil
 }
 
-func parseQuickSearch(req *http.Response) ([]*QuickSearchResult, error) {
-	doc, err := htmlquery.Parse(req.Body)
+func parseQuickSearch(resp *http.Response) ([]*QuickSearchResult, error) {
+	doc, err := htmlquery.Parse(resp.Body)
 	if err != nil {
 		return []*QuickSearchResult{}, err
 	}
@@ -209,21 +208,21 @@ func parseQuickSearch(req *http.Response) ([]*QuickSearchResult, error) {
 		url := htmlquery.SelectAttr(htmlquery.FindOne(body, "//a"), "href")
 		image := htmlquery.SelectAttr(htmlquery.FindOne(body, "//img"), "src")
 
-		resutStruct := &QuickSearchResult{
+		resultStruct := &QuickSearchResult{
 			Title: title,
 			ID:    extractIDFromURL(url),
 			URL:   url,
 			Image: image,
 		}
 
-		results = append(results, resutStruct)
+		results = append(results, resultStruct)
 	}
 
 	return results, nil
 }
 
-func parseSearch(req *http.Response) ([]*SearchResult, error) {
-	doc, err := htmlquery.Parse(req.Body)
+func parseSearch(resp *http.Response) ([]*SearchResult, error) {
+	doc, err := htmlquery.Parse(resp.Body)
 	if err != nil {
 		return []*SearchResult{}, err
 	}
@@ -313,8 +312,8 @@ func extractIDFromURL(url string) string {
 	return ""
 }
 
-func parseSeries(req *http.Response) (*SeriesResult, error) {
-	doc, err := htmlquery.Parse(req.Body)
+func parseSeries(resp *http.Response) (*SeriesResult, error) {
+	doc, err := htmlquery.Parse(resp.Body)
 	if err != nil {
 		return &SeriesResult{}, err
 	}
