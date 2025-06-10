@@ -1,6 +1,7 @@
 module github.com/ancientcatz/novelupdates
 
-go 1.22.0
+go 1.24.0
+
 toolchain go1.24.1
 
 require (
@@ -11,7 +12,7 @@ require (
 require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/antchfx/xpath v1.3.3 // indirect
-	github.com/cloudflare/circl v1.5.0 // indirect
+	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/google/pprof v0.0.0-20241210010833-40e02aabc2ad // indirect
